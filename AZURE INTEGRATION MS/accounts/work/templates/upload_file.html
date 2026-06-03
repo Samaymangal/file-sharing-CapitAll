@@ -1,0 +1,394 @@
+{% comment %} {% extends "template.html" %}
+{% block content %}
+<div style="max-width:560px; margin:3rem auto; padding:2rem;
+            background:#1e1e2e; border-radius:12px;">
+  <h1 style="font-size:1.6rem; font-weight:700; margin-bottom:0.4rem;">Upload File 📤</h1>
+  <p style="color:#888; margin-bottom:1.5rem;">Share a file with your team.</p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form %}
+    <div style="margin-bottom:1.2rem;">
+      <label style="display:block; font-size:0.85rem; color:#aaa;
+                    text-transform:uppercase; margin-bottom:0.4rem;">
+        {{ field.label }}
+      </label>
+      {{ field }}
+    </div>
+    {% endfor %}
+    <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+      <button type="submit"
+              style="background:#7c3aed; color:#fff; border:none; padding:0.7rem 1.8rem;
+                     border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer;">
+        Upload →
+      </button>
+      <a href="{% url 'file_list' %}"
+         style="background:#374151; color:#fff; padding:0.7rem 1.4rem;
+                border-radius:8px; text-decoration:none; font-weight:600;">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %} {% endcomment %}
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload File | CapitAll</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0a0a0f; --surface:#13131a; --surface2:#1c1c27; --border:#2a2a3a;
+      --accent:#6c63ff; --accent2:#ff6b9d; --accent3:#00d4aa;
+      --text:#f0f0f8; --muted:#7a7a9a; --danger:#ff6b6b;
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width:220px; min-height:100vh; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 0; flex-shrink:0; position:fixed; top:0; left:0; bottom:0; }
+    .logo { display:flex; align-items:center; gap:8px; padding:0 20px 28px; font-size:20px; font-weight:700; color:var(--text); text-decoration:none; }
+    .logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0; }
+    .user-card { margin:0 12px 28px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; }
+    .avatar { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+    .user-info .name { font-size:13px; font-weight:600; }
+    .user-info .email { font-size:11px; color:var(--muted); word-break:break-all; }
+    nav { flex:1; padding:0 12px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:var(--muted); transition:all .18s; margin-bottom:2px; text-decoration:none; }
+    .nav-item:hover { background:var(--surface2); color:var(--text); }
+    .nav-item.active { background:rgba(108,99,255,.15); color:var(--accent); }
+    .nav-item svg { width:16px; height:16px; flex-shrink:0; }
+    .logout { margin:0 12px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:var(--danger); transition:all .18s; text-decoration:none; }
+    .logout:hover { background:rgba(255,107,107,.1); }
+
+    /* ── Main ── */
+    .main { flex:1; margin-left:220px; padding:40px 48px; display:flex; align-items:flex-start; justify-content:center; }
+
+    .upload-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:36px 40px;
+      width:100%;
+      max-width:560px;
+    }
+
+    .card-header { margin-bottom:28px; }
+    .card-header h1 { font-size:24px; font-weight:700; display:flex; align-items:center; gap:10px; }
+    .card-header p { color:var(--muted); margin-top:6px; font-size:14px; }
+
+    /* Form fields */
+    .form-group { margin-bottom:20px; }
+    .form-label { display:block; font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+
+    .form-input, .form-textarea {
+      width:100%; background:var(--surface2); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-family:inherit; font-size:14px;
+      padding:12px 14px; outline:none; transition:border-color .18s, box-shadow .18s;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color:var(--muted); }
+    .form-input:focus, .form-textarea:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(108,99,255,.12);
+    }
+    .form-textarea { resize:vertical; min-height:100px; line-height:1.6; }
+
+    /* Django field errors */
+    .errorlist { list-style:none; margin-top:6px; }
+    .errorlist li { font-size:12px; color:var(--danger); }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border:2px dashed var(--border);
+      border-radius:12px;
+      padding:32px 20px;
+      text-align:center;
+      cursor:pointer;
+      transition:border-color .2s, background .2s;
+      position:relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color:var(--accent);
+      background:rgba(108,99,255,.06);
+    }
+    .drop-zone input[type="file"] {
+      position:absolute; inset:0; width:100%; height:100%;
+      opacity:0; cursor:pointer;
+    }
+    .drop-zone-icon { font-size:32px; margin-bottom:10px; pointer-events:none; }
+    .drop-zone-title { font-size:15px; font-weight:600; margin-bottom:4px; pointer-events:none; }
+    .drop-zone-hint { font-size:12px; color:var(--muted); pointer-events:none; }
+    .drop-zone-hint span { color:var(--accent); text-decoration:underline; }
+
+    /* Selected file preview */
+    .file-preview {
+      display:none;
+      align-items:center;
+      gap:12px;
+      background:var(--surface2);
+      border:1px solid var(--accent);
+      border-radius:10px;
+      padding:12px 16px;
+      margin-top:10px;
+    }
+    .file-preview.visible { display:flex; animation:fade-in .2s ease; }
+    @keyframes fade-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+    .file-preview-icon { font-size:24px; flex-shrink:0; }
+    .file-preview-info { flex:1; min-width:0; }
+    .file-preview-name { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .file-preview-size { font-size:12px; color:var(--muted); margin-top:2px; }
+    .file-preview-clear { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:0; line-height:1; flex-shrink:0; transition:color .15s; }
+    .file-preview-clear:hover { color:var(--danger); }
+
+    /* Actions */
+    .form-actions { display:flex; gap:10px; margin-top:28px; }
+    .btn-upload {
+      background:linear-gradient(135deg,var(--accent),#8b83ff);
+      border:none; color:#fff; border-radius:10px;
+      padding:12px 28px; font-size:14px; font-weight:600;
+      cursor:pointer; display:flex; align-items:center; gap:8px;
+      transition:opacity .15s, transform .1s; font-family:inherit;
+    }
+    .btn-upload:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-upload:active { transform:translateY(0); }
+    .btn-upload:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .btn-cancel {
+      background:var(--surface2); border:1px solid var(--border);
+      color:var(--muted); border-radius:10px; padding:12px 22px;
+      font-size:14px; font-weight:500; cursor:pointer; text-decoration:none;
+      display:inline-flex; align-items:center; transition:background .15s, color .15s;
+    }
+    .btn-cancel:hover { background:var(--border); color:var(--text); }
+
+    /* Progress bar */
+    .progress-wrap { display:none; margin-top:16px; }
+    .progress-wrap.visible { display:block; }
+    .progress-bar-bg { background:var(--surface2); border-radius:6px; height:6px; overflow:hidden; }
+    .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent3)); border-radius:6px; width:0%; transition:width .3s ease; }
+    .progress-label { font-size:12px; color:var(--muted); margin-top:6px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <a href="{% url 'dashboard' %}" class="logo">
+    <div class="logo-dot"></div>
+    CapitAll
+  </a>
+  <div class="user-card">
+    <div class="avatar">{{ user_name|slice:":2"|upper }}</div>
+    <div class="user-info">
+      <div class="name">{{ user_name }}</div>
+      <div class="email">{{ user_email }}</div>
+    </div>
+  </div>
+  <nav>
+    <a href="{% url 'dashboard' %}" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="{% url 'upload_file' %}" class="nav-item active">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload File
+    </a>
+    <a href="{% url 'file_list' %}" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      My Files
+    </a>
+  </nav>
+  <a href="{% url 'logout' %}" class="logout">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </a>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <div class="upload-card">
+
+    <div class="card-header">
+      <h1>📤 Upload File</h1>
+      <p>Share a file with your team members.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+      {% csrf_token %}
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label" for="id_title">Title</label>
+        <input
+          type="text"
+          name="title"
+          id="id_title"
+          class="form-input"
+          placeholder="Give your file a name…"
+          value="{{ form.title.value|default:'' }}"
+          required
+        >
+        {% if form.title.errors %}
+          <ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label" for="id_description">Description <span style="color:var(--muted);font-weight:400;text-transform:none;">(optional)</span></label>
+        <textarea
+          name="description"
+          id="id_description"
+          class="form-textarea"
+          placeholder="What's this file about?"
+        >{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+          <ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <!-- File drop zone -->
+      <div class="form-group">
+        <label class="form-label">File</label>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" name="file" id="id_file" required>
+          <div class="drop-zone-icon">📎</div>
+          <div class="drop-zone-title">Drop your file here</div>
+          <div class="drop-zone-hint">or <span>browse from your computer</span></div>
+        </div>
+
+        <!-- Selected file pill -->
+        <div class="file-preview" id="file-preview">
+          <span class="file-preview-icon" id="preview-icon">📄</span>
+          <div class="file-preview-info">
+            <div class="file-preview-name" id="preview-name">filename.pdf</div>
+            <div class="file-preview-size" id="preview-size">0 KB</div>
+          </div>
+          <button type="button" class="file-preview-clear" id="clear-file" title="Remove file">✕</button>
+        </div>
+
+        {% if form.file.errors %}
+          <ul class="errorlist" style="margin-top:8px;">{% for e in form.file.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <!-- Progress bar (shown on submit) -->
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+        <div class="progress-label" id="progress-label">Uploading…</div>
+      </div>
+
+      <!-- Non-field errors -->
+      {% if form.non_field_errors %}
+        <div style="background:rgba(255,107,107,.1);border:1px solid var(--danger);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;color:var(--danger);">
+          {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn-upload" id="submit-btn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload File
+        </button>
+        <a href="{% url 'file_list' %}" class="btn-cancel">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+<script>
+  const dropZone   = document.getElementById('drop-zone');
+  const fileInput  = document.getElementById('id_file');
+  const preview    = document.getElementById('file-preview');
+  const previewIcon= document.getElementById('preview-icon');
+  const previewName= document.getElementById('preview-name');
+  const previewSize= document.getElementById('preview-size');
+  const clearBtn   = document.getElementById('clear-file');
+  const submitBtn  = document.getElementById('submit-btn');
+  const progressWrap = document.getElementById('progress-wrap');
+  const progressFill = document.getElementById('progress-fill');
+  const progressLabel= document.getElementById('progress-label');
+
+  const EXT_ICONS = {
+    pdf:'📄', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊',
+    jpg:'🖼️', jpeg:'🖼️', png:'🖼️', gif:'🖼️', svg:'🖼️',
+    mp4:'🎬', mov:'🎬', mp3:'🎵', wav:'🎵',
+    zip:'🗜️', rar:'🗜️', '7z':'🗜️',
+    py:'🐍', js:'📜', html:'🌐', css:'🎨', json:'📋',
+  };
+
+  function fmtSize(b) {
+    if (b < 1024)     return b + ' B';
+    if (b < 1048576)  return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  function showPreview(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    previewIcon.textContent = EXT_ICONS[ext] || '📎';
+    previewName.textContent = file.name;
+    previewSize.textContent = fmtSize(file.size);
+    preview.classList.add('visible');
+    // hide the drop zone content, keep zone for re-click
+    dropZone.querySelector('.drop-zone-icon').style.display = 'none';
+    dropZone.querySelector('.drop-zone-title').style.display = 'none';
+    dropZone.querySelector('.drop-zone-hint').style.display = 'none';
+  }
+
+  function resetFile() {
+    fileInput.value = '';
+    preview.classList.remove('visible');
+    dropZone.querySelector('.drop-zone-icon').style.display = '';
+    dropZone.querySelector('.drop-zone-title').style.display = '';
+    dropZone.querySelector('.drop-zone-hint').style.display = '';
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) showPreview(fileInput.files[0]);
+  });
+
+  clearBtn.addEventListener('click', (e) => { e.stopPropagation(); resetFile(); });
+
+  // Drag and drop
+  dropZone.addEventListener('dragover',  (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      // assign dropped file to input via DataTransfer
+      const dtr = new DataTransfer();
+      dtr.items.add(dt.files[0]);
+      fileInput.files = dtr.files;
+      showPreview(dt.files[0]);
+    }
+  });
+
+  // Animate progress bar on submit
+  document.getElementById('upload-form').addEventListener('submit', function() {
+    if (!fileInput.files.length) return;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⏳ Uploading…';
+    progressWrap.classList.add('visible');
+
+    // Fake progress animation until page navigates away
+    let pct = 0;
+    const iv = setInterval(() => {
+      pct = Math.min(pct + Math.random() * 18, 90);
+      progressFill.style.width = pct + '%';
+      progressLabel.textContent = 'Uploading… ' + Math.round(pct) + '%';
+      if (pct >= 90) clearInterval(iv);
+    }, 200);
+  });
+</script>
+</body>
+</html>
